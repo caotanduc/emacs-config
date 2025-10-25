@@ -5,19 +5,11 @@
 .#*
 
 # --- Auto save & history files ---
-auto-save-list/
 history
 ido.last
 projects
-eshell/
-transient/
+var/
 tmp/
-
-# --- Package manager directories ---
-elpa/
-straight/
-quelpa/
-package-archives/
 
 # --- Customization file (user-specific settings) ---
 .emacs.custom.el

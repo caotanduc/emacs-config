@@ -21,11 +21,18 @@
 (setq custom-file (expand-file-name ".emacs.custom.el" user-emacs-directory))
 (load custom-file)
 
-(make-directory (expand-file-name "tmp/backups/" user-emacs-directory) t)
-(setq backup-directory-alist `(("." . ,(expand-file-name "tmp/backups/" user-emacs-directory))))
-(make-directory (expand-file-name "tmp/auto-saves/" user-emacs-directory) t)
-(setq auto-save-list-file-prefix (expand-file-name "tmp/auto-saves/sessions/" user-emacs-directory)
-      auto-save-file-name-transforms `((".*" ,(expand-file-name "tmp/auto-saves/" user-emacs-directory) t)))
+(let ((data-dir (expand-file-name "tmp/" user-emacs-directory)))
+  (make-directory data-dir t)
+  (setq backup-directory-alist `(("." . ,(expand-file-name "backups/" data-dir))))
+  (setq auto-save-list-file-prefix (expand-file-name "auto-saves/sessions/" data-dir))
+  (setq auto-save-file-name-transforms `((".*", (expand-file-name "auto-saves" data-dir) t))))
+
+(let ((data-dir (expand-file-name "var/" user-emacs-directory)))
+  (make-directory data-dir t)
+  (setq auto-save-list-file-prefix (expand-file-name "auto-save/" data-dir))
+  (setq eshell-directory-name (expand-file-name "eshell/" data-dir))
+  (setq transient-history-file (expand-file-name "transient/history.el" data-dir))
+  (setq package-user-dir (expand-file-name "elpa/" data-dir)))
 
 ;; Packages
 (setq use-package-always-defer t)
@@ -161,4 +168,5 @@
     (setq interprogram-paste-function 'copy-from-osx)))
 
 (when window-system
-  (load-theme 'gruvbox-light-hard t))
+  ;; (load-theme 'gruvbox-light-hard t)
+)
