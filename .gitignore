@@ -1,0 +1,34 @@
+# --- Emacs compiled or backup files ---
+*.elc
+*~
+\#*\#
+.#*
+
+# --- Auto save & history files ---
+auto-save-list/
+history
+ido.last
+projects
+eshell/
+transient/
+tmp/
+
+# --- Package manager directories ---
+elpa/
+straight/
+quelpa/
+package-archives/
+
+# --- Customization file (user-specific settings) ---
+.emacs.custom.el
+
+# --- Environment or lock files ---
+tramp
+bookmarks
+recentf
+projectile-bookmarks.eld
+projectile.cache
+*.eld
+
+# --- OS specific ---
+.DS_Store
