@@ -168,5 +168,8 @@
     (setq interprogram-paste-function 'copy-from-osx)))
 
 (when window-system
-  ;; (load-theme 'gruvbox-light-hard t)
+  (load-theme 'leuven t)
 )
+
+(add-to-list 'load-path (expand-file-name "lisp/" user-emacs-directory))
+(require 'init-treesit)
