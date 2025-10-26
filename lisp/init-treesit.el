@@ -14,11 +14,7 @@
 
   ;; --- 2. Grammar sources ---
   (setq treesit-language-source-alist
-        '((python "https://github.com/tree-sitter/tree-sitter-python" "v0.23.6")
-          (bash   "https://github.com/tree-sitter/tree-sitter-bash" "v0.23.3")
-          (json   "https://github.com/tree-sitter/tree-sitter-json")
-          (toml   "https://github.com/tree-sitter/tree-sitter-toml")
-          (yaml   "https://github.com/ikatyang/tree-sitter-yaml")))
+        '((python "https://github.com/tree-sitter/tree-sitter-python" "v0.23.6")))
 
   ;; --- 3. Define universal grammar readiness check ---
   (defun my/treesit-grammar-ready-p (lang)
@@ -42,16 +38,13 @@
       (message "✅ Installed grammar for %s" lang)))
 
   ;; Auto-install for these languages
-  (dolist (lang '(python bash json toml yaml))
+  (dolist (lang '(python))
     (my/ensure-treesit-language-installed lang))
 
   ;; --- 5. Prefer Tree-sitter major modes ---
   (setq major-mode-remap-alist
-        '((python-mode . python-ts-mode)
-          (bash-mode   . bash-ts-mode)
-          (json-mode   . json-ts-mode)
-          (yaml-mode   . yaml-ts-mode)
-          (toml-mode   . toml-ts-mode)))
+        '((python-mode . python-ts-mode)))
+
 
   ;; --- 6. Better syntax highlighting ---
   (setq treesit-font-lock-level 4))

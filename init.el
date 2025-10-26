@@ -13,8 +13,15 @@
 (add-to-list 'initial-frame-alist '(undecorated . t))
 (add-to-list 'default-frame-alist '(undecorated . t))
 
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
+;; editor config
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+(electric-indent-mode 1)
 (electric-pair-mode t)
+(setq-default electric-indent-inhibit nil)
+
 
 (setq eshell-destroy-buffer-when-process-dies t)
 
@@ -97,7 +104,6 @@
          ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
          ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
          ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
-         ("C-x t b" . consult-buffer-other-tab)    ;; orig. switch-to-buffer-other-tab
          ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
          ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
          ;; Other custom bindings
@@ -154,6 +160,8 @@
 
 (use-package gruvbox-theme)
 
+(use-package vterm)
+
 ;; macos configuration for emacs terminal
 (unless window-system
   (when (and (executable-find "pbcopy") (executable-find "pbpaste"))
@@ -169,7 +177,40 @@
 
 (when window-system
   (load-theme 'leuven t)
+  (setq exec-path (append exec-path '("/opt/homebrew/bin/")))
 )
 
-(add-to-list 'load-path (expand-file-name "lisp/" user-emacs-directory))
-(require 'init-treesit)
+(use-package company)
+
+(use-package emacs-lisp-mode
+  :ensure nil
+  :hook ((emacs-lisp-mode-hook . company-mode)))
+
+(setq treesit-language-source-alist
+      '((python "https://github.com/tree-sitter/tree-sitter-python" "v0.23.6")))
+
+(use-package eglot
+  :ensure nil
+  :config
+  ;; Run both basedpyright and ruff for python-ts-mode
+  (add-to-list 'eglot-server-programs
+               '(python-ts-mode
+                 . ("basedpyright-langserver" "--stdio")))
+
+  ;; Configure basedpyright and inlay hints
+  (setq-default eglot-workspace-configuration
+                '(:basedpyright
+                  (:typeCheckingMode "recommended"
+                   :analysis
+                   (:diagnosticSeverityOverrides
+                    (:reportUnusedCallResult "none")))
+                  :inlayHints
+                  (:callArgumentNames "all"
+                   :functionReturnTypes t))))
+
+(use-package python-ts-mode
+  :ensure nil
+  :hook ((python-ts-mode . eglot-ensure)
+	 (python-ts-mode . company-mode)
+	 (after-save . eglot-format-buffer))
+  :mode (("\\.py\\'" . python-ts-mode)))
