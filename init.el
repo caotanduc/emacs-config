@@ -5,9 +5,12 @@
 (setq inhibit-startup-screen t)
 (setq visible-bell t)
 
-(add-to-list 'default-frame-alist `(font . "Source Code Pro-20"))
+(add-to-list 'default-frame-alist `(font . "Iosevka Extended-24"))
+
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+;; (set-face-attribute 'default nil :background "#EEFFCC")
 
 ;; Remove title bar / window decorations
 (add-to-list 'initial-frame-alist '(undecorated . t))
@@ -21,7 +24,7 @@
 (electric-indent-mode 1)
 (electric-pair-mode t)
 (setq-default electric-indent-inhibit nil)
-
+(setq tab-always-indent 'complete)
 
 (setq eshell-destroy-buffer-when-process-dies t)
 
@@ -99,6 +102,7 @@
 
 ;; Example configuration for Consult
 (use-package consult
+  :disabled t
   :bind (;; C-x bindings in `ctl-x-map'
          ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
          ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
@@ -135,7 +139,10 @@
          ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
          ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
          ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
-         ;; Minibuffer history
+         ;; Eshell
+         :map eshell-mode-map
+         ("s-r" . consult-history)
+         ;; Minibuffer 
          :map minibuffer-local-map
          ("M-s" . consult-history)                 ;; orig. next-matching-history-element
          ("M-r" . consult-history))                ;; orig. previous-matching-history-element
@@ -162,6 +169,12 @@
 
 (use-package vterm)
 
+(use-package multiple-cursors)
+
+(global-set-key (kbd "C->") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
+
 ;; macos configuration for emacs terminal
 (unless window-system
   (when (and (executable-find "pbcopy") (executable-find "pbpaste"))
@@ -176,26 +189,33 @@
     (setq interprogram-paste-function 'copy-from-osx)))
 
 (when window-system
-  (load-theme 'leuven t)
-  (setq exec-path (append exec-path '("/opt/homebrew/bin/")))
+  (load-theme 'gruvbox t)
+  (setq exec-path (append exec-path '("/opt/homebrew/bin/"
+                                      "~/.cargo/bin/"
+                                      "/usr/local/bin/")))
 )
 
-(use-package company)
+(use-package breadcrumb)
 
-(use-package emacs-lisp-mode
-  :ensure nil
-  :hook ((emacs-lisp-mode-hook . company-mode)))
+(use-package company
+  :init
+  (global-company-mode))
 
 (setq treesit-language-source-alist
       '((python "https://github.com/tree-sitter/tree-sitter-python" "v0.23.6")))
 
 (use-package eglot
-  :ensure nil
+  :hook (;;(after-save . eglot-format-buffer)
+         (eglot--managed-mode . breadcrumb-local-mode)
+         (eglot--managed-mode . eglot-booster-mode))
   :config
+  ;; (fset #'jsonrpc--log-event #'ignore)
+  ;; (setq jsonrpc-event-hook nil)
   ;; Run both basedpyright and ruff for python-ts-mode
   (add-to-list 'eglot-server-programs
-               '(python-ts-mode
-                 . ("basedpyright-langserver" "--stdio")))
+               `(python-ts-mode . ,(eglot-alternatives '(("pyright-langserver" "--stdio")
+                                                         ("basedpyright-langserver" "--stdio")
+                                                         ("ruff" "server")))))
 
   ;; Configure basedpyright and inlay hints
   (setq-default eglot-workspace-configuration
@@ -208,9 +228,44 @@
                   (:callArgumentNames "all"
                    :functionReturnTypes t))))
 
+(use-package reformatter
+  :config
+  (reformatter-define ruff-check
+    :program "ruff"
+    :args `("check" "--fix" "--stdin-filename" ,buffer-file-name "-"))
+  (reformatter-define ruff-organize-imports
+    :program "ruff"
+    :args `("check" "--select" "I" "--fix" "--stdin-filename" ,buffer-file-name "-"))
+  (reformatter-define ruff-format
+    :program "ruff"
+    :args `("format" "--stdin-filename" ,buffer-file-name "-")))
+
 (use-package python-ts-mode
   :ensure nil
   :hook ((python-ts-mode . eglot-ensure)
-	 (python-ts-mode . company-mode)
-	 (after-save . eglot-format-buffer))
+         (python-ts-mode . conda-env-autoactivate-mode)(python-ts-mode . ruff-check-on-save-mode)
+         (python-ts-mode . ruff-organize-imports-on-save-mode)
+         (python-ts-mode . ruff-format-on-save-mode))
   :mode (("\\.py\\'" . python-ts-mode)))
+
+(use-package conda
+  :config
+  (conda-env-initialize-eshell)
+  (conda-env-initialize-interactive-shells)
+  (conda-env-autoactivate-mode t)
+  (add-hook 'find-file-hook (lambda () (when (bound-and-true-p conda-project-env-path)
+                                         (conda-env-activate-for-buffer)))))
+
+;; (dir-locals-set-class-variables 'base-conda
+;;    '((nil . ((conda-project-env-path . "/Users/tanduc/miniconda3/envs/py312")))))
+
+;; (dir-locals-set-directory-class
+;;    "/Users/tanduc/Documents/startups/saas/" 'base-conda)
+
+(add-to-list 'load-path (expand-file-name "lisp/" user-emacs-directory))
+(require 'eglot-booster)
+(require 'vscode)
+(require 'dashboard)
+
+(global-vscode-mode 1)
+(add-hook 'emacs-startup-hook #'my/welcome-buffer)
