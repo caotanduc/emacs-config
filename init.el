@@ -5,12 +5,10 @@
 (setq inhibit-startup-screen t)
 (setq visible-bell t)
 
-(add-to-list 'default-frame-alist `(font . "Iosevka Extended-24"))
+(add-to-list 'default-frame-alist `(font . "Iosevka Extended-20"))
 
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
-
-;; (set-face-attribute 'default nil :background "#EEFFCC")
 
 ;; Remove title bar / window decorations
 (add-to-list 'initial-frame-alist '(undecorated . t))
@@ -19,13 +17,9 @@
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 ;; editor config
-(setq-default indent-tabs-mode nil)
-(setq-default tab-width 4)
-(electric-indent-mode 1)
 (electric-pair-mode t)
-(setq-default electric-indent-inhibit nil)
-(setq tab-always-indent 'complete)
 
+(setq tab-always-indent 'complete)
 (setq eshell-destroy-buffer-when-process-dies t)
 
 (setq custom-file (expand-file-name ".emacs.custom.el" user-emacs-directory))
@@ -205,9 +199,9 @@
       '((python "https://github.com/tree-sitter/tree-sitter-python" "v0.23.6")))
 
 (use-package eglot
-  :hook (;;(after-save . eglot-format-buffer)
-         (eglot--managed-mode . breadcrumb-local-mode)
+  :hook ((eglot--managed-mode . breadcrumb-local-mode)
          (eglot--managed-mode . eglot-booster-mode))
+  :bind (:map eglot-mode-map ("<f2>" . eglot-rename))
   :config
   ;; (fset #'jsonrpc--log-event #'ignore)
   ;; (setq jsonrpc-event-hook nil)
@@ -221,12 +215,14 @@
   (setq-default eglot-workspace-configuration
                 '(:basedpyright
                   (:typeCheckingMode "recommended"
-                   :analysis
-                   (:diagnosticSeverityOverrides
-                    (:reportUnusedCallResult "none")))
+				     :analysis
+				     (:diagnosticSeverityOverrides
+				      (:reportUnusedCallResult "none")))
                   :inlayHints
                   (:callArgumentNames "all"
-                   :functionReturnTypes t))))
+				      :functionReturnTypes t)
+		  :pyright ()
+		  :ruff ())))
 
 (use-package reformatter
   :config
@@ -243,10 +239,16 @@
 (use-package python-ts-mode
   :ensure nil
   :hook ((python-ts-mode . eglot-ensure)
-         (python-ts-mode . conda-env-autoactivate-mode)(python-ts-mode . ruff-check-on-save-mode)
+         (python-ts-mode . conda-env-autoactivate-mode)
+         (python-ts-mode . ruff-check-on-save-mode)
          (python-ts-mode . ruff-organize-imports-on-save-mode)
          (python-ts-mode . ruff-format-on-save-mode))
-  :mode (("\\.py\\'" . python-ts-mode)))
+  :mode (("\\.py\\'" . python-ts-mode))
+  :config
+  (setq indent-tabs-mode nil)
+  (setq tab-width 4)
+  (setq electric-indent-inhibit nil)
+  (electric-indent-mode 1))
 
 (use-package conda
   :config
@@ -254,13 +256,11 @@
   (conda-env-initialize-interactive-shells)
   (conda-env-autoactivate-mode t)
   (add-hook 'find-file-hook (lambda () (when (bound-and-true-p conda-project-env-path)
-                                         (conda-env-activate-for-buffer)))))
+                                         (conda-env-activate-for-buffer))))
+  (custom-set-variables
+   '(conda-anaconda-home "~/miniconda3/"))
 
-;; (dir-locals-set-class-variables 'base-conda
-;;    '((nil . ((conda-project-env-path . "/Users/tanduc/miniconda3/envs/py312")))))
-
-;; (dir-locals-set-directory-class
-;;    "/Users/tanduc/Documents/startups/saas/" 'base-conda)
+  (setq conda-env-home-directory (expand-file-name "~/miniconda3/")))
 
 (add-to-list 'load-path (expand-file-name "lisp/" user-emacs-directory))
 (require 'eglot-booster)
