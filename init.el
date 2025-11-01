@@ -11,8 +11,15 @@
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 ;; Remove title bar / window decorations
-(add-to-list 'initial-frame-alist '(undecorated . t))
-(add-to-list 'default-frame-alist '(undecorated . t))
+;; (add-to-list 'initial-frame-alist '(undecorated . t))
+;; (add-to-list 'default-frame-alist '(undecorated . t))
+
+(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+(add-to-list 'default-frame-alist '(ns-appearance . light))
+(setq ns-use-proxy-icon nil)
+(setq frame-title-format
+      '("%b"
+        (:eval (when (buffer-modified-p) "*"))))
 
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
@@ -65,6 +72,13 @@
   (vertico-mode)
   (vertico-insert))
 
+(use-package vertico-posframe
+  :after vertico
+  :init
+  ;; (vertico-posframe-mode 1)
+  :config
+  (setq vertico-posframe-poshandler #'posframe-poshandler-frame-top-center))
+
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
   :init
@@ -82,9 +96,6 @@
 
 (use-package orderless
   :custom
-  ;; Configure a custom style dispatcher (see the Consult wiki)
-  ;; (orderless-style-dispatchers '(+orderless-consult-dispatch orderless-affix-dispatch))
-  ;; (orderless-component-separator #'orderless-escapable-split-on-space)
   (completion-styles '(orderless basic))
   (completion-category-overrides '((file (styles partial-completion))))
   (completion-category-defaults nil) ;; Disable defaults, use our settings
@@ -163,27 +174,15 @@
 
 (use-package vterm)
 
+(use-package eat)
+
 (use-package multiple-cursors)
 
 (global-set-key (kbd "C->") 'mc/mark-next-like-this)
 (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
 (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
 
-;; macos configuration for emacs terminal
-(unless window-system
-  (when (and (executable-find "pbcopy") (executable-find "pbpaste"))
-    (defun copy-from-osx ()
-      (shell-command-to-string "pbpaste"))
-    (defun paste-to-osx (text &optional push)
-      (let ((process-connection-type nil))
-        (let ((proc (start-process "pbcopy" "*Messages*" "pbcopy")))
-          (process-send-string proc text)
-          (process-send-eof proc))))
-    (setq interprogram-cut-function 'paste-to-osx)
-    (setq interprogram-paste-function 'copy-from-osx)))
-
-(when window-system
-  (load-theme 'gruvbox t)
+(when (and (eq system-type 'darwin) window-system)
   (setq exec-path (append exec-path '("/opt/homebrew/bin/"
                                       "~/.cargo/bin/"
                                       "/usr/local/bin/")))
@@ -203,8 +202,8 @@
          (eglot--managed-mode . eglot-booster-mode))
   :bind (:map eglot-mode-map ("<f2>" . eglot-rename))
   :config
-  ;; (fset #'jsonrpc--log-event #'ignore)
-  ;; (setq jsonrpc-event-hook nil)
+  (fset #'jsonrpc--log-event #'ignore)
+  (setq jsonrpc-event-hook nil)
   ;; Run both basedpyright and ruff for python-ts-mode
   (add-to-list 'eglot-server-programs
                `(python-ts-mode . ,(eglot-alternatives '(("pyright-langserver" "--stdio")
@@ -259,6 +258,7 @@
                                          (conda-env-activate-for-buffer))))
   (custom-set-variables
    '(conda-anaconda-home "~/miniconda3/"))
+  (conda-mode-line-setup)
 
   (setq conda-env-home-directory (expand-file-name "~/miniconda3/")))
 
@@ -267,5 +267,20 @@
 (require 'vscode)
 (require 'dashboard)
 
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
+(load-theme 'pylight t)
+
 (global-vscode-mode 1)
 (add-hook 'emacs-startup-hook #'my/welcome-buffer)
+
+(setq-default
+ mode-line-format
+ '("%e" mode-line-front-space
+   (:eval (when conda-env-current-name
+	    (concat "[py:" conda-env-current-name "] ")))
+   mode-line-position-line-format (project-mode-line project-mode-line-format)
+   (vc-mode vc-mode)
+
+   (:eval (when (bound-and-true-p flymake-mode)
+            flymake-mode-line-format))
+   mode-line-end-spaces))

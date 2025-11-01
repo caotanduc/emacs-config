@@ -12,11 +12,11 @@
             cursor-type nil)
       ;; Build the two parts
       (let* ((fake (propertize "fake" 'face '(:foreground "yellow" :background "black" :weight bold :height 10.0)))
-             (ide  (propertize "ide"  'face '(:foreground "black"  :background "yellow" :weight bold :height 10.0)))
+             (ide  (propertize "macs"  'face '(:foreground "black"  :background "yellow" :weight bold :height 10.0)))
              (text (concat fake ide))
              (win-width (window-body-width))
              (win-height (window-body-height))
-             (text-width (string-width "fakeide"))
+             (text-width (string-width "fakemacs"))
              (h-padding (/ (- win-width text-width) 2))
              (v-padding (/ win-height 2)))
         ;; Insert padding and text
