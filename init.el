@@ -254,8 +254,8 @@
   (conda-env-initialize-eshell)
   (conda-env-initialize-interactive-shells)
   (conda-env-autoactivate-mode t)
-  (add-hook 'find-file-hook (lambda () (when (bound-and-true-p conda-project-env-path)
-                                         (conda-env-activate-for-buffer))))
+  ;; (add-hook 'find-file-hook (lambda () (when (bound-and-true-p conda-project-env-path)
+  ;;                                        (conda-env-activate-for-buffer))))
   (custom-set-variables
    '(conda-anaconda-home "~/miniconda3/"))
   (conda-mode-line-setup)
@@ -273,14 +273,21 @@
 (global-vscode-mode 1)
 (add-hook 'emacs-startup-hook #'my/welcome-buffer)
 
+(setq mode-line-right-align-edge 'right-fringe)
 (setq-default
  mode-line-format
- '("%e" mode-line-front-space
-   (:eval (when conda-env-current-name
-	    (concat "[py:" conda-env-current-name "] ")))
-   mode-line-position-line-format (project-mode-line project-mode-line-format)
-   (vc-mode vc-mode)
-
+ '("%e"
+   mode-line-front-space
+   (:eval (when vc-mode
+	    (format  " %s" vc-mode)))
+   (project-mode-line project-mode-line-format)
+   ;; Flymake
    (:eval (when (bound-and-true-p flymake-mode)
             flymake-mode-line-format))
+   ;; Align right
+   mode-line-format-right-align
+   "Ln: %l "
+   (:eval
+    (when conda-env-current-name
+      (concat "[py:" conda-env-current-name "]")))
    mode-line-end-spaces))

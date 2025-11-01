@@ -84,6 +84,23 @@
    `(org-quote ((,class (:foreground ,comment :slant italic))))
    `(org-link ((,class (:foreground "#4B83CD" :underline t))))
    `(org-code ((,class (:foreground "#c65d09" :weight bold))))
+
+   
+   ;; Mode line styling
+   `(mode-line
+     ((,class (:background "#ddeebb"
+               :foreground "#000000"
+               :box (:line-width -1 :color "#ccccaa")
+               :height 0.9))))  ;; smaller font
+
+   `(mode-line-inactive
+     ((,class (:background "#f0f0e0"
+               :foreground "#666666"
+               :box (:line-width -1 :color "#ddddcc")
+               :height 0.9))))
+
+   `(mode-line-buffer-id
+     ((,class (:foreground "#06287e" :weight bold))))  ;; filename color (deep blue)   
    ))
 
 ;;;###autoload
